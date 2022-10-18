@@ -33,6 +33,15 @@
             );
         }
 
+        const vecDot = (vec1, vec2) => {
+            const [vec1Start, vec1End] = vec1;
+            const [vec2Start, vec2End] = vec2;
+
+            return (vec1End.x - vec1Start.x) * (vec2End.x - vec2Start.x)
+             + (vec1End.y - vec1Start.y) * (vec2End.y - vec2Start.y)
+             + (vec1End.z - vec1Start.z) * (vec2End.z - vec2Start.z);
+        }
+
         const rayIntersectObject = (rayVec, object) => {
             const crossoverPoints = [];
             const [vecStartPoint, vecEndPoint] = rayVec;
@@ -40,9 +49,9 @@
             if(object.type === 'sphere') {
                 const tempVec = [object.center, vecStartPoint];
 
-                const a = Math.pow(vecEndPoint.x, 2) + Math.pow(vecEndPoint.y, 2) + Math.pow(vecEndPoint.z, 2);
-                const b = -2 * (vecEndPoint.x * object.center.x + vecEndPoint.y * object.center.y + vecEndPoint.z * object.center.z);
-                const c = Math.pow(object.center.x, 2) + Math.pow(object.center.y, 2) + Math.pow(object.center.z, 2) - Math.pow(object.radius, 2);
+                const a = vecDot(rayVec, rayVec);
+                const b = 2 * vecDot(tempVec, rayVec);
+                const c = vecDot(tempVec, tempVec) - Math.pow(object.radius, 2);
 
                 // 求根公式
                 const disc = Math.pow(b, 2) - 4 * a * c;
