@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1.Light</title>
+</head>
+
+<body>
+    <canvas id="canvas" width="100" height="100"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+
+        const putPixel = ({ x, y }, { r, g, b }) => {
+            ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+            ctx.fillRect(x, y, 1, 1);
+        };
+
+        const coordinateTrans = ({ x, y, z }) => {
+            return {x: x + width / 2, y: height / 2 - y, z};
+        }
+
+        const measureDistance = (point1, point2) => {
+            return Math.sqrt(
+                Math.pow(point1.x - point2.x, 2),
+                Math.pow(point1.y - point2.y, 2),
+                Math.pow(point1.z - point2.z, 2),
+            );
+        }
+
+        const vecDot = (vec1, vec2) => {
+            const [vec1Start, vec1End] = vec1;
+            const [vec2Start, vec2End] = vec2;
+
+            return (vec1End.x - vec1Start.x) * (vec2End.x - vec2Start.x)
+             + (vec1End.y - vec1Start.y) * (vec2End.y - vec2Start.y)
+             + (vec1End.z - vec1Start.z) * (vec2End.z - vec2Start.z);
+        }
+
+        const rayIntersectObject = (rayVec, object) => {
+            const crossoverPoints = [];
+            const [vecStartPoint, vecEndPoint] = rayVec;
+
+            if(object.type === 'sphere') {
+                const tempVec = [object.center, vecStartPoint];
+
+                const a = vecDot(rayVec, rayVec);
+                const b = 2 * vecDot(tempVec, rayVec);
+                const c = vecDot(tempVec, tempVec) - Math.pow(object.radius, 2);
+
+                // 求根公式
+                const disc = Math.pow(b, 2) - 4 * a * c;
+
+                if(disc === 0) {
+                    const t = (-b + Math.sqrt(disc)) / (2 * a);
+                    crossoverPoints.push({
+                        x: Math.round(t * (vecStartPoint.x + vecEndPoint.x)),
+                        y: Math.round(t * (vecStartPoint.y + vecEndPoint.y)),
+                        z: Math.round(t * (vecStartPoint.z + vecEndPoint.z)),
+                    });
+                } else if(disc > 0) {
+                    const t1 = (-b + Math.sqrt(disc)) / (2 * a);
+                    const t2 = (-b - Math.sqrt(disc)) / (2 * a);
+
+                    crossoverPoints.push({
+                        x: Math.round(t1 * (vecStartPoint.x + vecEndPoint.x)),
+                        y: Math.round(t1 * (vecStartPoint.y + vecEndPoint.y)),
+                        z: Math.round(t1 * (vecStartPoint.z + vecEndPoint.z)),
+                    }, {
+                        x: Math.round( t2 * (vecStartPoint.x + vecEndPoint.x)),
+                        y: Math.round( t2 * (vecStartPoint.y + vecEndPoint.y)),
+                        z: Math.round( t2 * (vecStartPoint.z + vecEndPoint.z)),
+                    });
+                }
+            }
+
+            return crossoverPoints;
+        }
+
+        const computeLightIntensity = (vec, normal, lightSources) => {
+            let intensity = 0;
+
+            for(const light of lightSources) {
+                if(light.type === 'ambient') {
+                    intensity += light.intensity;
+                    continue;
+                }
+
+                // 漫反射
+                if(light.specular === -1) {
+
+                } else {
+                // 镜面反射
+                    // 法线 光线 视线 s
+                }
+            }
+
+            return intensity;
+        }
+
+        const traceRay = (vec, objects) => {
+            const [start] = vec;
+            let minDistance = Number.MAX_SAFE_INTEGER;
+            // 默认背景白色
+            let color = { r: 255, g: 255, b: 255 };
+
+            for (const object of objects) {
+                // 找出物体与从相机出发的光线的交点
+                const crossoverPoints = rayIntersectObject(vec, object,);
+
+                for (const crossoverPoint of crossoverPoints) {
+                    const distance = measureDistance(start, crossoverPoint);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        color = object.color;
+                    }
+                }
+            }
+
+            return color;
+        }
+
+        const sphere1 = {
+            type: 'sphere',
+            center: { x: 0, y: -100, z: 300 },
+            radius: 100,
+            color: { r: 255, g: 0, b: 0 },
+            // 表面光滑程度, 用于计算光线反射强度
+            specular: 10,
+        }
+        const sphere2 = {
+            type: 'sphere',
+            center: { x: 200, y: 0, z: 400 },
+            radius: 100,
+            color: { r: 0, g: 255, b: 0 },
+            specular: -1,
+        }
+        const sphere3 = {
+            type: 'sphere',
+            center: { x: -200, y: 0, z: 400 },
+            radius: 100,
+            color: { r: 0, g: 0, b: 255 },
+            specular: 100,
+        }
+
+        const objects = [sphere1, sphere2, sphere3];
+
+        const lightSource1 = {
+            type: 'ambient',
+            intensity: 10,
+        };
+        const lightSource2 = {
+            type: 'point',
+            position: {x: 10,y: 10, z: 10},
+            intensity: 20,
+        };
+        const lightSource3 = {
+            type: 'directional',
+            intensity: 30,
+            direction: [{x:0, y: 0, z: 0}, {x: 10, y: 10, z: 40}],
+        };
+
+        const lightSources = [lightSource1, lightSource2, lightSource3];
+
+        const camera = { x: 0, y: 0, z: 0 };
+        const viewport = { x: 0, y: 0, z: 100 };
+
+        for (let i = -width / 2; i < width / 2; i++) {
+            for (let j = -height / 2; j < height / 2; j++) {
+                const vec = [camera, { x: i, y: j, z: viewport.z }];
+
+                const color = traceRay(vec, objects);
+                const lightIntensity = computeLightIntensity(vec, objects, lightSources);
+
+                const canvasCoordinate = coordinateTrans({ x: i, y: j, z: 0 })
+                putPixel(canvasCoordinate, color * lightIntensity);
+            }
+        }
+    </script>
+</body>
+
+</html>
