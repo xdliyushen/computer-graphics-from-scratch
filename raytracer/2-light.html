@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1.Light</title>
+    <title>2.Light</title>
 </head>
 
 <body>
@@ -15,6 +15,8 @@
         const ctx = canvas.getContext('2d');
         const width = canvas.width;
         const height = canvas.height;
+
+        const CANVAS_BG_COLOR = { r: 255, g: 255, b: 255 };
 
         const putPixel = ({ x, y }, { r, g, b }) => {
             ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
@@ -40,6 +42,15 @@
             return (vec1End.x - vec1Start.x) * (vec2End.x - vec2Start.x)
              + (vec1End.y - vec1Start.y) * (vec2End.y - vec2Start.y)
              + (vec1End.z - vec1Start.z) * (vec2End.z - vec2Start.z);
+        }
+
+        const vecModule = (vec) => {
+            return Math.sqrt(Math.pow(vec.x, 2) + Math.pow(vec.y, 2));
+        }
+
+        const computeColorMultiple = (color, multiple) => {
+            const fn = (a, b) => Math.max(255, Math.min(0, a * b));
+            return { r: fn(color.r, multiple), g: fn(color.g, multiple), b: fn(color.b, multiple) };
         }
 
         const rayIntersectObject = (rayVec, object) => {
@@ -82,7 +93,7 @@
             return crossoverPoints;
         }
 
-        const computeLightIntensity = (vec, normal, lightSources) => {
+        const computeLightIntensity = (lightVec, normalVec, lightSources) => {
             let intensity = 0;
 
             for(const light of lightSources) {
@@ -93,7 +104,7 @@
 
                 // 漫反射
                 if(light.specular === -1) {
-
+                    intensity += light.intensity * vecDot(lightVec, normalVec) / (vecModule(lightVec) * vecModule(normalVec));
                 } else {
                 // 镜面反射
                     // 法线 光线 视线 s
@@ -107,22 +118,28 @@
             const [start] = vec;
             let minDistance = Number.MAX_SAFE_INTEGER;
             // 默认背景白色
-            let color = { r: 255, g: 255, b: 255 };
+            let color = CANVAS_BG_COLOR;
+            let targetCrossoverPoint = null;
+            let targetObject = null;
 
             for (const object of objects) {
                 // 找出物体与从相机出发的光线的交点
-                const crossoverPoints = rayIntersectObject(vec, object,);
+                const crossoverPoints = rayIntersectObject(vec, object);
 
                 for (const crossoverPoint of crossoverPoints) {
                     const distance = measureDistance(start, crossoverPoint);
                     if (distance < minDistance) {
                         minDistance = distance;
                         color = object.color;
+                        targetCrossoverPoint = crossoverPoint;
                     }
                 }
             }
 
-            return color;
+            // todo 修改
+            const intensity = computeLightIntensity()
+
+            return computeColorMultiple(color, intensity);
         }
 
         const sphere1 = {
@@ -175,10 +192,9 @@
                 const vec = [camera, { x: i, y: j, z: viewport.z }];
 
                 const color = traceRay(vec, objects);
-                const lightIntensity = computeLightIntensity(vec, objects, lightSources);
-
                 const canvasCoordinate = coordinateTrans({ x: i, y: j, z: 0 })
-                putPixel(canvasCoordinate, color * lightIntensity);
+
+                putPixel(canvasCoordinate, color);
             }
         }
     </script>
