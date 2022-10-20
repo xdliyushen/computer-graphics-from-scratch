@@ -45,12 +45,32 @@
         }
 
         const vecModule = (vec) => {
-            return Math.sqrt(Math.pow(vec.x, 2) + Math.pow(vec.y, 2));
+            const [start, end] = vec;
+            const x = start.x - end.x;
+            const y = start.y - end.y;
+            const z = start.z - end.z;
+
+            return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2));
+        }
+
+        const vecCross = (vec, multiple) => {
+            const [start, end] = vec;
+            return [
+                {x: start.x * multiple, y: start.y * multiple, z: start.z * multiple},
+                {x: end.x * multiple, y: end.y * multiple, z: end.z * multiple},
+            ];
+        }
+
+        const vecCos = (vec1, vec2) => {
+            return vecDot(vec1, vec2) / (vecModule(vec1) * vecModule(vec2));
         }
 
         const computeColorMultiple = (color, multiple) => {
-            const fn = (a, b) => Math.max(255, Math.min(0, a * b));
-            return { r: fn(color.r, multiple), g: fn(color.g, multiple), b: fn(color.b, multiple) };
+            return { 
+                r: Math.min(255, Math.max(0, color.r * multiple)),
+                g: Math.min(255, Math.max(0, color.g * multiple)), 
+                b: Math.min(255, Math.max(0, color.b * multiple)),
+            };
         }
 
         const rayIntersectObject = (rayVec, object) => {
@@ -93,38 +113,69 @@
             return crossoverPoints;
         }
 
-        const computeLightIntensity = (lightVec, normalVec, lightSources) => {
+        const computeLightIntensity = (viewVec, object, lightSources) => {
+            const [crossoverPoint] = viewVec;
+
             let intensity = 0;
+
+            // 计算表面法向量
+            let normalVec = null;
+            if(object?.type === 'sphere') {
+                normalVec = [object.center, crossoverPoint];
+            }
 
             for(const light of lightSources) {
                 if(light.type === 'ambient') {
                     intensity += light.intensity;
-                    continue;
-                }
+                } else if(!!object && (light.type === 'directional' || light.type === 'point')) {
+                    // 计算入射光线向量
+                    let lightVec = null;
+                    if(light.type === 'directional') {
+                        lightVec = light.direction;
+                    } else if(light.type === 'point') {
+                        if(object?.type === 'sphere') {
+                            lightVec = [object.center, light.position];
+                        }
+                    }
 
-                // 漫反射
-                if(light.specular === -1) {
-                    intensity += light.intensity * vecDot(lightVec, normalVec) / (vecModule(lightVec) * vecModule(normalVec));
-                } else {
-                // 镜面反射
-                    // 法线 光线 视线 s
+                    // 漫反射
+                    if(object.specular === -1) {
+                        const diffuseIntensity = light.intensity * vecCos(lightVec, normalVec);
+
+                        // 当表面法线夹角与入射光线夹角角度大于 90° 时, 计算出的光强为负数
+                        if(diffuseIntensity > 0) {
+                            intensity += diffuseIntensity;
+                        }
+                    } else {
+                    // 镜面反射
+                        const multiple = (2 * vecCos(lightVec, normalVec) - 1);
+                        const reflectedLightVec = vecCross(lightVec, multiple);
+                        const specularIntensity = light.intensity * vecCos(reflectedLightVec, viewVec);
+
+                        // todo s
+                        if(specularIntensity > 0) {
+                            intensity += specularIntensity;
+                        }
+                    }
                 }
             }
 
             return intensity;
         }
 
-        const traceRay = (vec, objects) => {
-            const [start] = vec;
+        const traceRay = (viewRay, objects, lightSources) => {
+            const [start] = viewRay;
             let minDistance = Number.MAX_SAFE_INTEGER;
             // 默认背景白色
             let color = CANVAS_BG_COLOR;
+            // 光线与物体表面最近的交点
             let targetCrossoverPoint = null;
+            // 光线所打中的物体
             let targetObject = null;
 
             for (const object of objects) {
                 // 找出物体与从相机出发的光线的交点
-                const crossoverPoints = rayIntersectObject(vec, object);
+                const crossoverPoints = rayIntersectObject(viewRay, object);
 
                 for (const crossoverPoint of crossoverPoints) {
                     const distance = measureDistance(start, crossoverPoint);
@@ -132,12 +183,16 @@
                         minDistance = distance;
                         color = object.color;
                         targetCrossoverPoint = crossoverPoint;
+                        targetObject = object;
                     }
                 }
             }
 
-            // todo 修改
-            const intensity = computeLightIntensity()
+            // 计算光线强度
+            const intensity = computeLightIntensity([start, targetCrossoverPoint], targetObject, lightSources);
+
+            // todo 删除
+            console.log('intensity', intensity)
 
             return computeColorMultiple(color, intensity);
         }
@@ -189,9 +244,14 @@
 
         for (let i = -width / 2; i < width / 2; i++) {
             for (let j = -height / 2; j < height / 2; j++) {
-                const vec = [camera, { x: i, y: j, z: viewport.z }];
+                const viewVec = [camera, { x: i, y: j, z: viewport.z }];
 
-                const color = traceRay(vec, objects);
+                // todo 删除
+                if( i === 0 && j === 0) {
+                    console.log(99)
+                }
+
+                const color = traceRay(viewVec, objects, lightSources);
                 const canvasCoordinate = coordinateTrans({ x: i, y: j, z: 0 })
 
                 putPixel(canvasCoordinate, color);
