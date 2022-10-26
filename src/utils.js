@@ -20,3 +20,16 @@ export const DotProduct = (v1, v2) => {
 export const Length = (v) => {
     return Math.sqrt(DotProduct(v, v));
 }
+
+// ==================================================
+// Object
+// ==================================================
+export const Object = (type, settings) => {
+    if (type === 'sphere') {
+        return new Sphere(settings);
+    }
+}
+
+// ==================================================
+// Light
+// ==================================================
