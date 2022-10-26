@@ -8,8 +8,10 @@
 </head>
 <body>
     <canvas id="canvas" width="100" height="100"></canvas>
-    <form id="config" onchange="onFormChange">
+    <form id="config" onchange="onFormChange()">
         <div class="render-config">
+            <label>Render Config</label>
+
             <label for="canvas-width">Canvas Width</label>
             <input type="number" id="canvas-width" name="canvas-width" value="100">
 
@@ -39,36 +41,107 @@
         </div>
 
         <div class="view-config">
-            <label for="camera-position">Camera Position</label>
+            <label>View Config</label>
 
-            <label for="camera-position-x">X</label>
-            <input type="number" id="camera-position-x" name="camera-position-x" value="0">
+            <div class="camera-position">
+                <label for="camera-position">Camera Position</label>
 
-            <label for="camera-position-y">Y</label>
-            <input type="number" id="camera-position-y" name="camera-position-y" value="0">
+                <label for="camera-position-x">X</label>
+                <input type="number" id="camera-position-x" name="camera-position-x" value="0">
 
-            <label for="camera-position-z">Z</label>
-            <input type="number" id="camera-position-z" name="camera-position-z" value="0">
+                <label for="camera-position-y">Y</label>
+                <input type="number" id="camera-position-y" name="camera-position-y" value="0">
 
-            <label for="camera-look-at">Camera Look At</label>
+                <label for="camera-position-z">Z</label>
+                <input type="number" id="camera-position-z" name="camera-position-z" value="0">
+            </div>
 
-            <label for="camera-look-at-x">X</label>
-            <input type="number" id="camera-look-at-x" name="camera-look-at-x" value="0">
+            <div class="camera-look-at">
+                <label for="camera-look-at">Camera Look At</label>
 
-            <label for="camera-look-at-y">Y</label>
-            <input type="number" id="camera-look-at-y" name="camera-look-at-y" value="0">
+                <label for="camera-look-at-x">X</label>
+                <input type="number" id="camera-look-at-x" name="camera-look-at-x" value="0">
 
-            <label for="camera-look-at-z">Z</label>
-            <input type="number" id="camera-look-at-z" name="camera-look-at-z" value="0">
+                <label for="camera-look-at-y">Y</label>
+                <input type="number" id="camera-look-at-y" name="camera-look-at-y" value="0">
 
-            <!-- view port position?? -->
+                <label for="camera-look-at-z">Z</label>
+                <input type="number" id="camera-look-at-z" name="camera-look-at-z" value="0">
+            </div>
+
+            <div class="viewport-size">
+                <label for="viewport-size">Viewport Size</label>
+
+                <label for="viewport-width">Viewport Width</label>
+                <input type="number" id="viewport-width" name="viewport-width" value="100">
+
+                <label for="viewport-height">Viewport Height</label>
+                <input type="number" id="viewport-height" name="viewport-height" value="100">
+            </div>
         </div>
 
-        <label for="lights">lights</label>
-        <div class="lights"></div>
+        <div class="lights-config">
+            <label>Lights Config</label>
 
-        <label for="objects">objects</label>
-        <div class="objects"></div>
+            <div class="light">
+                <label for="light-type">Light Type</label>
+                <select name="light-type" id="light-type">
+                    <option value="ambient">ambient</option>
+                    <option value="point">point</option>
+                    <option value="directional">directional</option>
+                </select>
+
+                <div class="light-position">
+                    <label for="light-position">Light Position</label>
+
+                    <label for="light-position-x">X</label>
+                    <input type="number" id="light-position-x" name="light-position-x" value="0">
+
+                    <label for="light-position-y">Y</label>
+                    <input type="number" id="light-position-y" name="light-position-y" value="0">
+
+                    <label for="light-position-z">Z</label>
+                    <input type="number" id="light-position-z" name="light-position-z" value="0">
+                </div>
+
+                <label for="light-intensity">Light Intensity</label>
+                <input type="number" id="light-intensity" name="light-intensity" value="0">
+            </div>
+
+            <input type="button" value="Add" onclick="addLight()">
+        </div>
+
+        <div class="objects-config">
+            <label>Objects Config</label>
+
+            <div class="object">
+                <label for="object-type">Object Type</label>
+                <select name="object-type" id="object-type">
+                    <option value="sphere">sphere</option>
+                </select>
+
+                <div class="object-position">
+                    <label for="object-position">Object Position</label>
+
+                    <label for="object-position-x">X</label>
+                    <input type="number" id="object-position-x" name="object-position-x" value="0">
+
+                    <label for="object-position-y">Y</label>
+                    <input type="number" id="object-position-y" name="object-position-y" value="0">
+
+                    <label for="object-position-z">Z</label>
+                    <input type="number" id="object-position-z" name="object-position-z" value="0">
+                </div>
+
+                <label for="object-radius">Object Radius</label>
+                <input type="number" id="object-radius" name="object-radius" value="0">
+
+                <label for="object-color">Object Color</label>
+                <input type="color" id="object-color" name="object-color" value="#ffffff">
+            </div>
+
+            <input type="button" value="Add" onclick="addObject()">
+        </div>
     </form>
     <script>
         const canvas = document.getElementById('canvas');
