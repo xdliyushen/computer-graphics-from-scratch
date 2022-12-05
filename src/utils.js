@@ -1,35 +1,53 @@
 // ==================================================
 // Linear algebra utils
 // ==================================================
-export const Add = (v1, v2) => {
+const Trans = (start, end) => {
+    return [end[0] - start[0], end[1] - start[1], end[2] - start[2]];
+}
+
+const Add = (v1, v2) => {
     return [v1[0] + v2[0], v1[1] + v2[1], v1[2] + v2[2]];
 };
 
-export const Substract = (v1, v2) => {
+const Substract = (v1, v2) => {
     return [v1[0] - v2[0], v1[1] - v2[1], v1[2] - v2[2]];
 }
 
-export const Multiply = (k, v) => {
+const Multiply = (k, v) => {
     return [k * v[0], k * v[1], k * v[2]];
 }
 
-export const DotProduct = (v1, v2) => {
+const DotProduct = (v1, v2) => {
     return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
 }
 
-export const Length = (v) => {
+const Length = (v) => {
     return Math.sqrt(DotProduct(v, v));
 }
 
 // ==================================================
 // Object
 // ==================================================
-export const Object = (type, settings) => {
-    if (type === 'sphere') {
-        return new Sphere(settings);
+class Sphere {
+    constructor(center, radius, color) {
+        this.type = 'sphere';
+        this.center = center;
+        this.radius = radius;
+        this.color = color;
+
+        return this;
     }
 }
 
 // ==================================================
 // Light
 // ==================================================
+class Light {
+    constructor(type, intensity, position) {
+        this.type = type;
+        this.intensity = intensity;
+        this.position = position;
+
+        return this;
+    }
+}
